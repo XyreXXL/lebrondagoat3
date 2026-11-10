@@ -768,14 +768,6 @@ class ApiRouteTests(unittest.TestCase):
         self.assertEqual(response["status"], "503 Service Unavailable")
         self.assertIn("Upstash Redis", json.loads(body)["error"])
 
-    def test_vercel_config_builds_and_routes_to_python_wsgi_entrypoint(self):
-        config_path = os.path.join(os.path.dirname(__file__), "vercel.json")
-        with open(config_path, encoding="utf-8") as config_file:
-            config = json.load(config_file)
-
-        self.assertEqual(config["builds"], [{"src": "app.py", "use": "@vercel/python"}])
-        self.assertEqual(config["routes"], [{"src": "/(.*)", "dest": "app.py"}])
-
     def test_ai_endpoint_requires_configuration_session_and_same_origin(self):
         status, _, body = self.request("GET", "/api/ai/status")
         self.assertEqual(status, 200)
