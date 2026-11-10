@@ -20,7 +20,7 @@
 }
 
 body {
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   margin: 0;
   background:
@@ -1164,5 +1164,866 @@ h3 {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+:root {
+  --surface-raised: rgb(31 34 28 / 88%);
+  --surface-shadow: 0 16px 40px rgb(0 0 0 / 18%);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.app-shell {
+  isolation: isolate;
+}
+
+.topbar,
+.intro,
+.weather-card,
+.recommendation,
+.footer {
+  animation: section-appear 420ms ease both;
+}
+
+.intro { animation-delay: 50ms; }
+.weather-card { animation-delay: 100ms; }
+.recommendation { animation-delay: 150ms; }
+.footer { animation-delay: 200ms; }
+
+.weather-card,
+.settings-panel,
+.track-card,
+.player {
+  box-shadow: var(--surface-shadow);
+}
+
+.weather-card {
+  background:
+    linear-gradient(120deg, rgb(29 32 26 / 96%), rgb(25 27 24 / 94%) 75%);
+  transition: border-color 220ms ease, background 300ms ease;
+}
+
+.settings-panel,
+.track-card,
+.player {
+  background-color: var(--surface-raised);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.settings-panel > summary,
+.track-item-button,
+.track-card,
+.player,
+.text-button,
+.search-button,
+.refresh-button,
+.genre-picker select,
+.spotify-button,
+.apple-link,
+.revoke-link,
+.like-button,
+.icon-button,
+.play-button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.settings-panel > summary {
+  min-height: 48px;
+  display: list-item;
+  padding-block: 12px;
+  line-height: 1.5;
+}
+
+.settings-panel > summary::marker {
+  color: var(--green);
+}
+
+.settings-panel[open] .settings-content {
+  animation: section-appear 220ms ease both;
+}
+
+.text-button,
+.search-button,
+.refresh-button,
+.genre-picker select,
+.spotify-button,
+.like-button,
+.icon-button,
+.play-button {
+  min-height: 44px;
+}
+
+.icon-button,
+.play-button {
+  width: 44px;
+  height: 44px;
+}
+
+.input-row input,
+.input-row,
+.location-field,
+.weather-description,
+.weather-location,
+.track-info,
+.track-item-info,
+.settings-content,
+.spotify-settings,
+.player,
+.progress-wrap {
+  min-width: 0;
+}
+
+.weather-location > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apple-link,
+.revoke-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
+#progress-slider {
+  height: 44px;
+  min-height: 44px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  touch-action: pan-x;
+}
+
+#progress-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background: #4a4e42;
+}
+
+#progress-slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgb(193 245 107 / 14%);
+}
+
+#progress-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: #4a4e42;
+}
+
+#progress-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--green);
+}
+
+#progress-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgb(193 245 107 / 14%);
+}
+
+.status-message:empty {
+  display: none;
+}
+
+#track-list:empty::before {
+  display: block;
+  padding: 18px 12px;
+  border: 1px dashed rgb(255 255 255 / 12%);
+  border-radius: 10px;
+  color: #92958b;
+  content: "Треки появятся здесь после загрузки рекомендаций.";
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.status-message:not(:empty) {
+  padding: 10px 12px;
+  border: 1px solid rgb(224 166 141 / 22%);
+  border-radius: 10px;
+  background: rgb(74 43 34 / 34%);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .track-card {
+    transition: border-color 200ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+
+  .track-card:hover {
+    transform: translateY(-2px);
+    border-color: rgb(193 245 107 / 22%);
+    box-shadow: 0 20px 46px rgb(0 0 0 / 24%);
+  }
+
+  .track-item-button:hover {
+    transform: translateX(3px);
+  }
+}
+
+button:active,
+.track-item-button:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 680px) {
+  body {
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .app-shell {
+    width: min(
+      calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)),
+      460px
+    );
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    height: 64px;
+    gap: 12px;
+  }
+
+  .brand {
+    min-width: 0;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .live-status {
+    gap: 6px;
+    font-size: 9px;
+    text-align: right;
+  }
+
+  .intro {
+    padding: clamp(32px, 9vw, 48px) 0 24px;
+  }
+
+  h1 {
+    font-size: clamp(38px, 10.8vw, 54px);
+    letter-spacing: -2.3px;
+    line-height: 1.06;
+  }
+
+  .intro-copy {
+    max-width: 38ch;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .weather-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .location-wrap {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .input-row {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .input-row input {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .search-button {
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding-inline: 10px;
+  }
+
+  .weather-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .weather-actions > .text-button {
+    min-height: 44px;
+    justify-self: start;
+    padding-inline: 10px;
+    font-size: 10px;
+    text-align: left;
+  }
+
+  .weather-meta {
+    max-width: none;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .weather-label {
+    font-size: 9px;
+  }
+
+  .city-local-time {
+    font-size: 13px;
+  }
+
+  .updated-at {
+    display: block;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  .weather-bottom {
+    min-height: 88px;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .weather-reading {
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .weather-icon {
+    width: 32px;
+    flex: 0 0 32px;
+    font-size: 27px;
+  }
+
+  .temperature {
+    font-size: 29px;
+  }
+
+  .weather-description {
+    gap: 4px;
+    margin-left: 0;
+  }
+
+  .weather-description strong {
+    font-size: 11px;
+  }
+
+  .weather-description span {
+    font-size: 9px;
+  }
+
+  .weather-divider {
+    flex: 0 0 1px;
+    margin-inline: 4px;
+  }
+
+  .weather-location {
+    max-width: 38%;
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .recommendation {
+    padding-top: 30px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  h2 {
+    font-size: clamp(20px, 5.6vw, 25px);
+    line-height: 1.2;
+  }
+
+  .mood-tag {
+    flex: 0 0 auto;
+    margin-top: 3px;
+  }
+
+  .mood-copy {
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .settings-panel > summary {
+    padding-inline: 12px;
+    font-size: 10px;
+  }
+
+  .settings-content {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .spotify-settings {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .spotify-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .spotify-actions .text-button {
+    min-height: 44px;
+    flex: 1 1 130px;
+    font-size: 10px;
+  }
+
+  .personalization-toggle {
+    gap: 12px;
+    padding-top: 12px;
+  }
+
+  .personalization-toggle input {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .personalization-toggle small,
+  .settings-description,
+  .settings-footnote {
+    font-size: 10px;
+  }
+
+  .playlist-toolbar {
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  .genre-picker {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .genre-picker select {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 10px 26px;
+    font-size: 12px;
+  }
+
+  .refresh-button {
+    min-height: 44px;
+    flex: 0 1 auto;
+    padding-inline: 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .track-card {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 13px;
+  }
+
+  .track-header {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .album-art {
+    width: 64px;
+    height: 64px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .track-info {
+    width: auto;
+    grid-column: 2 / 4;
+    grid-row: 1;
+  }
+
+  .track-kicker {
+    font-size: 7px;
+    letter-spacing: 0.9px;
+  }
+
+  h3 {
+    margin-block: 5px 3px;
+    font-size: clamp(14px, 4.2vw, 17px);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .track-info p {
+    font-size: 9px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .track-header .spotify-button {
+    min-height: 44px;
+    width: auto;
+    grid-column: 1 / 3;
+    grid-row: 2;
+    justify-self: stretch;
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .track-header .like-button {
+    width: 40px;
+    height: 40px;
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    margin: 0;
+  }
+
+  .player {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    padding: 10px 12px;
+  }
+
+  .player-controls {
+    width: 100%;
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .icon-button,
+  .play-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .progress-wrap {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1;
+  }
+
+  .now-playing {
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  #progress-slider {
+    height: 44px;
+    margin: 0;
+    touch-action: pan-x;
+  }
+
+  .apple-link {
+    min-height: 44px;
+    grid-column: 1 / -1;
+    justify-self: end;
+    margin: 0;
+    padding-block: 10px;
+    font-size: 10px;
+  }
+
+  .player-note {
+    margin: -4px 2px 0;
+    font-size: 9px;
+    line-height: 1.55;
+  }
+
+  .track-list {
+    gap: 2px;
+  }
+
+  .track-item-button {
+    min-height: 56px;
+    gap: 10px;
+    padding-inline: 5px;
+  }
+
+  .track-cover {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .track-item-info strong {
+    font-size: 11px;
+  }
+
+  .track-item-info > span {
+    font-size: 10px;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .footer-note {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  body[data-weather="clear"]::before,
+  body[data-weather="clouds"]::before,
+  body[data-weather="fog"]::before {
+    animation: none;
+  }
+
+  body[data-weather="rain"]::before {
+    opacity: 0.2;
+    background:
+      linear-gradient(160deg, rgb(52 83 105 / 13%), transparent 55%);
+    animation: none;
+  }
+
+  body[data-weather="snow"]::before {
+    opacity: 0.28;
+    animation: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-shell {
+    width: min(
+        calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)),
+      460px
+    );
+  }
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .brand-mark {
+    width: 27px;
+    height: 27px;
+  }
+
+  .live-status {
+    max-width: 118px;
+    font-size: 8px;
+  }
+
+  .weather-top,
+  .weather-bottom {
+    padding-inline: 12px;
+  }
+
+  .location-icon {
+    font-size: 22px;
+  }
+
+  .weather-actions > .text-button {
+    padding-inline: 7px;
+    font-size: 9px;
+  }
+
+  .weather-bottom {
+    gap: 5px;
+  }
+
+  .weather-reading {
+    gap: 4px;
+  }
+
+  .weather-icon {
+    width: 27px;
+    flex-basis: 27px;
+    font-size: 24px;
+  }
+
+  .temperature {
+    font-size: 26px;
+  }
+
+  .weather-description strong {
+    font-size: 10px;
+  }
+
+  .weather-description span {
+    font-size: 8px;
+  }
+
+  .weather-divider {
+    margin-inline: 2px;
+  }
+
+  .weather-location {
+    max-width: 34%;
+    font-size: 9px;
+  }
+
+  .playlist-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .genre-picker {
+    flex-basis: 100%;
+  }
+
+  .refresh-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 680px) and (orientation: landscape) {
+  .intro {
+    padding-block: 24px 18px;
+  }
+
+  .intro-copy {
+    max-width: 56ch;
+  }
+
+  .weather-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .weather-actions {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: end;
+  }
+
+  .weather-actions > .text-button {
+    justify-self: end;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 950px) and (max-height: 500px) and (orientation: landscape) {
+  body {
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .app-shell {
+    width: min(100% - 40px, 720px);
+  }
+
+  .intro {
+    padding-block: 20px 16px;
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 48px);
+    letter-spacing: -2px;
+  }
+
+  .weather-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+  }
+
+  .weather-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: end;
+    gap: 8px;
+  }
+
+  .weather-actions > .text-button {
+    justify-self: end;
+  }
+
+  .track-header {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .album-art {
+    width: 64px;
+    height: 64px;
+  }
+
+  .track-info {
+    width: auto;
+    grid-column: 2 / 4;
+  }
+
+  .track-header .spotify-button {
+    grid-column: 1 / 3;
+    justify-self: stretch;
+  }
+
+  .track-header .like-button {
+    grid-column: 3;
+    justify-self: end;
+    margin: 0;
+  }
+
+  .player {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+  }
+
+  .player-controls,
+  .progress-wrap {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1;
+  }
+
+  .player-controls {
+    justify-content: space-between;
+  }
+
+  .apple-link {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+@keyframes section-appear {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
