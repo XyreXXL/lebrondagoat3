@@ -100,26 +100,30 @@ Spotify может вернуть `403`, если аккаунт не разре
 
 ## Подключение AI-подбора
 
-Сервер поддерживает OpenAI-compatible Chat Completions API со строгим JSON
-Schema-ответом. Задайте API key только в окружении сервера:
+Сервер поддерживает OpenAI-compatible Chat Completions API. Для Google Gemini
+задайте секрет `AI_API_KEY` (либо `GEMINI_API_KEY`), модель и совместимый URL:
 
 ```powershell
-$env:AI_API_KEY = "ваш AI API key"
-$env:AI_MODEL = "gpt-4o-mini"
-# Необязательно: адрес другого OpenAI-compatible провайдера.
-$env:AI_API_URL = "https://api.openai.com/v1/chat/completions"
+$env:AI_API_KEY = "ваш Gemini API key"
+$env:AI_MODEL = "gemini-2.5-flash"
+$env:AI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 python server.py
 ```
 
-AI endpoint по умолчанию использует OpenAI. Параметр `AI_API_URL` должен
-указывать на совместимый Chat Completions endpoint по HTTPS; `AI_MODEL`
-задаёт доступную аккаунту модель. Ключ, модель и URL валидируются сервером.
+`AI_API_KEY` имеет приоритет; если он не задан, сервер также принимает
+`GEMINI_API_KEY`. По умолчанию URL и модель настроены на OpenAI
+(`AI_API_URL=https://api.openai.com/v1/chat/completions`,
+`AI_MODEL=gpt-4o-mini`). Для Gemini используйте URL и модель из примера выше.
+Ключ остаётся только на сервере; URL должен быть HTTPS, а модель должна быть
+доступна для проекта Gemini API.
 
 В настройках WeatherMood пользователь отдельно включает «Использовать AI для
 подбора», разрешая передавать провайдеру выбранный город, погоду, местное
 время, жанр и каталог реальных кандидатов. Spotify-данные и локальная история
-добавляются к AI-запросу только при включённой персонализации. Провайдер должен
-поддерживать `response_format: json_schema` со strict schema. Запросы
+добавляются к AI-запросу только при включённой персонализации. Запрос
+использует `response_format: json_object` и явный JSON-промпт с ID каталога;
+сервер принимает только ID существующих композиций, проверяет форму и
+содержание ответа и один раз повторяет запрос при некорректном JSON. Запросы
 ограничены по размеру и частоте; сервер не пишет их содержимое в логи.
 
 AI ранжирует реальные композиции из Apple iTunes Search API. Сервер проверяет,

@@ -26,6 +26,28 @@ from server import (
 
 
 class OAuthSessionTests(unittest.TestCase):
+    def test_gemini_api_key_environment_name_is_supported(self):
+        with patch.dict(
+            os.environ,
+            {
+                "AI_API_KEY": "",
+                "GEMINI_API_KEY": "gemini-test-key",
+                "AI_MODEL": "gemini-2.5-flash",
+                "AI_API_URL": (
+                    "https://generativelanguage.googleapis.com/v1beta/openai/"
+                    "chat/completions"
+                ),
+            },
+            clear=True,
+        ):
+            server = WeatherMoodServer(("127.0.0.1", 0))
+            try:
+                self.assertEqual(server.ai_api_key, "gemini-test-key")
+                self.assertEqual(server.ai_model, "gemini-2.5-flash")
+                self.assertTrue(server.ai_configured)
+            finally:
+                server.server_close()
+
     def test_redis_session_store_uses_expiring_server_side_records(self):
         class FakeResponse:
             def __init__(self, result):
@@ -254,10 +276,120 @@ class OAuthSessionTests(unittest.TestCase):
             message["content"] for message in request_payload["messages"]
         )
         self.assertEqual(result["trackIds"], [102, 101])
+        self.assertEqual(
+            request_payload["response_format"], {"type": "json_object"}
+        )
         self.assertIn("Europe/Moscow", prompt)
         self.assertIn("Miles Davis", prompt)
         self.assertIn("Night", prompt)
         self.assertEqual(captured["request"].get_header("Authorization"), "Bearer server-secret")
+
+    def test_ai_retries_invalid_json_and_accepts_string_catalog_ids(self):
+        response_bodies = [
+            json.dumps(
+                {"choices": [{"message": {"content": "not valid JSON"}}]}
+            ).encode(),
+            json.dumps(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {
+                                        "trackIds": ["101"],
+                                        "mood": "Тёплый дождливый джаз",
+                                        "reason": "Мягкий джаз соответствует погоде и времени суток.",
+                                    }
+                                )
+                            }
+                        }
+                    ]
+                }
+            ).encode(),
+        ]
+        request_payloads = []
+
+        class FakeResponse:
+            def __init__(self, body):
+                self.body = body
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return None
+
+            def read(self, _limit):
+                return self.body
+
+        def fake_urlopen(request, timeout):
+            request_payloads.append(json.loads(request.data.decode("utf-8")))
+            return FakeResponse(response_bodies.pop(0))
+
+        payload = {
+            "context": {
+                "city": "Москва",
+                "genre": "Jazz",
+                "temperatureC": 7,
+                "weatherDescription": "Дождь",
+                "dayPart": "вечером",
+            },
+            "candidates": [
+                {"id": 101, "title": "Rain", "artist": "Artist A"},
+                {"id": 102, "title": "Night", "artist": "Artist B"},
+            ],
+        }
+        with patch("server.urllib.request.urlopen", side_effect=fake_urlopen):
+            result = request_ai_playlist(
+                payload,
+                api_key="server-secret",
+                api_url=AI_DEFAULT_URL,
+                model="gemini-2.5-flash",
+            )
+
+        self.assertEqual(result["trackIds"], [101])
+        self.assertEqual(len(request_payloads), 2)
+        self.assertEqual(
+            request_payloads[0]["response_format"], {"type": "json_object"}
+        )
+        self.assertEqual(
+            request_payloads[1]["response_format"], {"type": "json_object"}
+        )
+        self.assertIn(
+            "Предыдущий ответ не прошёл проверку формата",
+            request_payloads[1]["messages"][-1]["content"],
+        )
+
+    def test_ai_reports_invalid_json_after_single_safe_retry(self):
+        response_body = json.dumps(
+            {"choices": [{"message": {"content": "not valid JSON"}}]}
+        ).encode()
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return None
+
+            def read(self, _limit):
+                return response_body
+
+        payload = {
+            "context": {"city": "Москва", "genre": "Jazz"},
+            "candidates": [{"id": 101, "title": "Rain", "artist": "Artist A"}],
+        }
+        with patch(
+            "server.urllib.request.urlopen", return_value=FakeResponse()
+        ) as urlopen:
+            with self.assertRaisesRegex(AIError, "дважды вернул некорректный JSON"):
+                request_ai_playlist(
+                    payload,
+                    api_key="server-secret",
+                    api_url=AI_DEFAULT_URL,
+                    model="gemini-2.5-flash",
+                )
+        self.assertEqual(urlopen.call_count, 2)
 
     def test_ai_rejects_fabricated_track_ids(self):
         class FakeResponse:
