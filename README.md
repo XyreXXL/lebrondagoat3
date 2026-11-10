@@ -1,0 +1,156 @@
+# Погодный ритм
+
+WeatherMood — адаптивное веб-приложение с музыкой под текущую погоду и местное
+время выбранного города. Небольшой сервер Python обслуживает Spotify OAuth и
+серверные AI-вызовы; ключи интеграций никогда не отправляются в браузер.
+
+## Запуск
+
+Требуется Python 3.10+ и Flask из `requirements.txt`:
+
+```powershell
+python -m pip install -r requirements.txt
+python server.py
+```
+
+Откройте `http://127.0.0.1:8000`. Геолокация браузера доступна на localhost и
+HTTPS; при отказе в разрешении можно найти город вручную. Не открывайте
+`index.html` напрямую: используйте тот же origin через `server.py`.
+
+## Подключение Spotify
+
+1. Создайте приложение в [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. В настройках приложения добавьте точный Redirect URI:
+   `http://127.0.0.1:8000/api/spotify/callback`.
+3. Задайте Client ID и Client Secret в окружении PowerShell:
+
+   ```powershell
+   $env:SPOTIFY_CLIENT_ID = "ваш Client ID"
+   $env:SPOTIFY_CLIENT_SECRET = "ваш Client Secret"
+   $env:SPOTIFY_REDIRECT_URI = "http://127.0.0.1:8000/api/spotify/callback"
+   python server.py
+   ```
+
+   Client Secret не помещается в исходный код или браузер. Авторизация
+   использует серверный Spotify Authorization Code Flow, точный Redirect URI и
+   проверку `state`; локально access и refresh tokens остаются в памяти, а
+   production-сессии хранятся в Upstash Redis. Cookie сессии подписана сервером,
+   имеет `HttpOnly`, `SameSite=Lax` и `Secure` в production.
+
+4. Нажмите «Подключить Spotify». Запрашиваются только `user-top-read`,
+   `user-read-recently-played`, `user-library-read` и `user-read-private`,
+   необходимые для топ-исполнителей/треков, недавних прослушиваний, сохранённых
+   треков и имени профиля. Жанры исполнителей Spotify может не вернуть:
+   приложение явно сообщает об этом.
+
+При отвязке WeatherMood удаляет свои токены и прекращает их использовать.
+Отдельного официального Spotify API для отзыва выданного разрешения нет —
+для отзыва откройте [подключённые приложения Spotify](https://www.spotify.com/account/apps/).
+
+### Развёртывание на Vercel
+
+Корневой `app.py` является поддерживаемой Vercel Python WSGI entrypoint-точкой
+и маршрутизирует сайт и `/api/*`; отдельный постоянно работающий WSGI-сервер
+не запускается. Python runtime использует стандартную библиотеку, поэтому
+`requirements.txt` не требует сторонних пакетов и `vercel.json` с ручными
+переписываниями маршрутов не нужен. Для OAuth нужны постоянные серверные
+сессии, поэтому подключите Upstash Redis из Vercel Storage и добавьте его
+Production-переменные:
+
+```text
+UPSTASH_REDIS_REST_URL
+UPSTASH_REDIS_REST_TOKEN
+```
+
+Также задайте в Vercel Production:
+
+- `SPOTIFY_CLIENT_ID` — Config.
+- `SPOTIFY_CLIENT_SECRET` — Secret.
+- `SPOTIFY_REDIRECT_URI=https://lebrondagoat3.vercel.app/api/spotify/callback` — Config
+  (замените домен, если Production-домен проекта отличается).
+- `APP_ENV=production` — Config.
+- `SPOTIFY_COOKIE_SECURE=true` — Config (production принудительно включает Secure).
+- `WEATHERMOOD_SESSION_SECRET` — Secret, не менее 32 случайных байт.
+
+Redis URL можно хранить как Config, Redis token — только Secret. В Spotify
+Dashboard укажите тот же точный HTTPS Redirect URI. После настройки переменных
+и подключения Upstash выполните новый Production Deployment.
+
+Без Upstash либо достаточного session secret Spotify-интеграция в Production
+остаётся отключённой с понятной ошибкой настройки; память Vercel Functions не
+является постоянным хранилищем OAuth-сессий. Локальный запуск продолжает
+использовать хранилище в памяти.
+
+### Ограничения Spotify
+
+Новые приложения работают в [Development Mode](https://developer.spotify.com/documentation/web-api/concepts/quota-modes):
+владелец должен иметь Spotify Premium, одновременно разрешено до пяти
+пользователей, а тестовые аккаунты необходимо добавить в allowlist Dashboard.
+Spotify может вернуть `403`, если аккаунт не разрешён. Приложение не полагается
+на [Recommendations API](https://developer.spotify.com/blog/2024-11-27-changes-to-the-web-api),
+который недоступен новым use cases и приложениям в Development Mode.
+Используются только данные, разрешённые scopes; пароль пользователя
+приложение не получает.
+
+Для production за HTTPS задайте `APP_ENV=production`,
+`WEATHERMOOD_SESSION_SECRET` (не менее 32 случайных байт) и
+`SPOTIFY_COOKIE_SECURE=true`; настройте точный публичный
+`SPOTIFY_REDIRECT_URI` и HTTPS reverse proxy. Не публикуйте сервер на
+недоверенную сеть без TLS и production-конфигурации.
+
+## Подключение AI-подбора
+
+Сервер поддерживает OpenAI-compatible Chat Completions API. Для Google Gemini
+задайте секрет `AI_API_KEY` (либо `GEMINI_API_KEY`), модель и совместимый URL:
+
+```powershell
+$env:AI_API_KEY = "ваш Gemini API key"
+$env:AI_MODEL = "gemini-2.5-flash"
+$env:AI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+python server.py
+```
+
+`AI_API_KEY` имеет приоритет; если он не задан, сервер также принимает
+`GEMINI_API_KEY`. По умолчанию URL и модель настроены на OpenAI
+(`AI_API_URL=https://api.openai.com/v1/chat/completions`,
+`AI_MODEL=gpt-4o-mini`). Для Gemini используйте URL и модель из примера выше.
+Ключ остаётся только на сервере; URL должен быть HTTPS, а модель должна быть
+доступна для проекта Gemini API.
+
+В настройках WeatherMood пользователь отдельно включает «Использовать AI для
+подбора», разрешая передавать провайдеру выбранный город, погоду, местное
+время, жанр и каталог реальных кандидатов. Spotify-данные и локальная история
+добавляются к AI-запросу только при включённой персонализации. Запрос
+использует `response_format: json_object` и явный JSON-промпт с ID каталога;
+сервер принимает только ID существующих композиций, проверяет форму и
+содержание ответа и один раз повторяет запрос при некорректном JSON. Запросы
+ограничены по размеру и частоте; сервер не пишет их содержимое в логи.
+
+AI ранжирует реальные композиции из Apple iTunes Search API. Сервер проверяет,
+что каждый возвращённый ID есть среди кандидатов, что треки уникальны и что
+недавно рекомендованные композиции по возможности исключены. При выключенном,
+недоступном или некорректном AI интерфейс объясняет ситуацию и переключается
+на резервный подбор. Проверьте условия хранения данных и политику
+конфиденциальности выбранного AI-провайдера до включения передачи данных.
+
+## Источники и персонализация
+
+- Поиск города и погода: Open-Meteo Geocoding и Forecast API.
+- Определение города по координатам: BigDataCloud Reverse Geocoding API.
+- Реальные музыкальные данные, обложки и доступные аудиопревью: Apple iTunes
+  Search API. Плеер воспроизводит только доступные превью; полный трек можно
+  открыть в Apple Music или найти в Spotify.
+- Часовой пояс берётся из ответа погоды для выбранных координат. Часы, день
+  недели и период суток вычисляются с этим часовым поясом, а не с часовым
+  поясом устройства.
+- При согласии на локальную персонализацию учитываются доступные Spotify
+  топы, сохранённые и недавние треки, а также обратная связь интерфейса. Лайки,
+  жанровые выборы, сигналы воспроизведения/пропуска и история предложенных
+  композиций хранятся локально в браузере; переключатель отключает их
+  использование.
+
+При настроенном AI и отдельном согласии пользователя используется
+генеративная модель; иначе работает базовая система рекомендаций. Ни AI, ни
+каталог не могут добавить к подборке композицию, которой не было в источнике
+музыкальных данных. Внешние API требуют интернета и подчиняются собственным
+ограничениям и условиям.
